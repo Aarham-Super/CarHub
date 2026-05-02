@@ -226,6 +226,39 @@ namespace CarHub.Controllers
             }
         }
 
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Checkout(int quantity, CancellationToken cancellationToken)
+        {
+            if (!_stripeCheckout.IsConfigured())
+            {
+                TempData["CheckoutError"] = "Stripe is not configured yet.";
+                return RedirectToAction(nameof(Cart));
+            }
+
+            if (quantity <= 0)
+            {
+                TempData["CheckoutError"] = "Your cart is empty.";
+                return RedirectToAction(nameof(Cart));
+            }
+
+            var customerEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var successUrl = $"{baseUrl}/Home/Cart?checkout=success";
+            var cancelUrl = $"{baseUrl}/Home/Cart?checkout=cancel";
+
+            try
+            {
+                var url = await _stripeCheckout.CreateCheckoutUrlAsync(successUrl, cancelUrl, quantity, customerEmail, cancellationToken);
+                return Redirect(url);
+            }
+            catch (Exception ex)
+            {
+                TempData["CheckoutError"] = ex.Message;
+                return RedirectToAction(nameof(Cart));
+            }
+        }
+
         [HttpGet]
         public IActionResult Error(int statusCode = 404)
         {
