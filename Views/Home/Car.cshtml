@@ -1,0 +1,72 @@
+@model CarHub.Models.CarDetailViewModel
+@{
+    ViewData["Title"] = Model.DisplayName;
+}
+
+<section class="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
+    <div class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+        <img src="@Model.HeroImage" alt="@Model.DisplayName" class="h-full w-full object-cover" />
+    </div>
+
+    <div class="space-y-6 rounded-3xl border border-white/10 bg-slate-900/80 p-6 sm:p-8">
+        <div>
+            <p class="text-sm uppercase tracking-[0.35em] text-orange-300">@Model.Brand / @Model.Model</p>
+            <h1 class="page-title mt-3 text-4xl font-black text-white">@Model.DisplayName</h1>
+            <p class="page-copy mt-4 text-base leading-7 text-slate-300">@Model.Description</p>
+        </div>
+
+        <div class="mobile-grid-2 grid grid-cols-2 gap-4 sm:grid-cols-4">
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Segment</div>
+                <div class="mt-1 font-semibold text-white">@Model.Segment</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Power</div>
+                <div class="mt-1 font-semibold text-white">@Model.Powertrain</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Drive</div>
+                <div class="mt-1 font-semibold text-white">@Model.Drivetrain</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-xs uppercase tracking-[0.2em] text-slate-500">0-60</div>
+                <div class="mt-1 font-semibold text-white">@Model.Acceleration</div>
+            </div>
+        </div>
+
+        <div class="mobile-stack">
+            <button class="rounded-full bg-accent px-5 py-3 font-semibold text-white" onclick="addToCart('@Model.DisplayName', '@Model.HeroImage')">
+                Save to cart
+            </button>
+            <a href="/Home/Cars" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white">
+                More cars
+            </a>
+        </div>
+
+        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
+            <div class="font-semibold text-white">Credit</div>
+            <p class="mt-2">@Model.CreditLine</p>
+            <a class="mt-2 inline-block text-orange-300 hover:text-orange-200" href="@Model.CreditUrl" target="_blank" rel="noreferrer">
+                Open Commons source
+            </a>
+        </div>
+    </div>
+</section>
+
+<section class="mt-10">
+    <h2 class="text-2xl font-bold text-white">Gallery</h2>
+    <div class="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        @for (var i = 0; i < Model.GalleryImages.Count; i++)
+        {
+            <figure class="overflow-hidden rounded-2xl border border-white/10 bg-white/5">
+                <img src="@Model.GalleryImages[i]" alt="@Model.DisplayName gallery image @(i + 1)" class="h-60 w-full object-cover" />
+                <figcaption class="px-4 py-3 text-sm text-slate-400">
+                    @if (i < Model.GalleryCredits.Count)
+                    {
+                        @Model.GalleryCredits[i]
+                    }
+                </figcaption>
+            </figure>
+        }
+    </div>
+</section>

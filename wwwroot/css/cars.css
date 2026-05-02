@@ -1,0 +1,37 @@
+.car-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 20px;
+    padding: 20px;
+}
+
+.car-card {
+    background: var(--card);
+    border-radius: 15px;
+    overflow: hidden;
+    transition: 0.3s;
+}
+
+.car-card:hover {
+    transform: translateY(-6px);
+}
+
+.car-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover;
+}
+
+.car-info {
+    padding: 15px;
+}
+
+.car-title {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.car-price {
+    color: var(--success);
+    font-size: 16px;
+}

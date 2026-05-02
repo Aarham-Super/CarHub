@@ -1,0 +1,88 @@
+@model IReadOnlyList<CarHub.Models.CarDetailViewModel>
+@{
+    ViewData["Title"] = "Home";
+}
+
+<section class="grid gap-8 lg:grid-cols-[1.2fr_0.8fr]">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow backdrop-blur sm:p-8">
+        <span class="inline-flex rounded-full border border-orange-400/30 bg-orange-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-orange-200">
+            Curated car showcase
+        </span>
+        <h1 class="page-title mt-5 text-4xl font-black tracking-tight text-white sm:text-6xl">
+            CarHub
+        </h1>
+        <p class="page-copy mt-4 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg sm:leading-8">
+            A polished showcase built for static supercar browsing, local cart saves, and clean brand/model pages.
+        </p>
+
+        <div class="mobile-stack mt-8">
+            <a href="/Home/Cars" class="rounded-full bg-accent px-5 py-3 text-center font-semibold text-white transition hover:bg-orange-500">
+                Browse the catalog
+            </a>
+            <a href="/Home/Credits" class="rounded-full border border-white/15 bg-white/5 px-5 py-3 text-center font-semibold text-white transition hover:bg-white/10">
+                View image credits
+            </a>
+            <a href="/Home/Account" class="rounded-full border border-blue-400/30 bg-blue-400/10 px-5 py-3 text-center font-semibold text-blue-200 transition hover:bg-blue-400/20">
+                Sign up / Log in
+            </a>
+            <a href="mailto:CarrHub@hotmail.com" class="rounded-full border border-emerald-400/30 bg-emerald-400/10 px-5 py-3 text-center font-semibold text-emerald-200 transition hover:bg-emerald-400/20">
+                Email for info
+            </a>
+        </div>
+    </div>
+
+    <div class="rounded-3xl border border-white/10 bg-slate-900/70 p-6">
+        <img src="/images/logo.jpg" alt="CarHub logo" class="h-64 w-full rounded-2xl object-cover" />
+        <div class="mobile-grid-2 mt-4 grid grid-cols-3 gap-3 text-center text-sm">
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-2xl font-bold text-white">@Model.Count</div>
+                <div class="text-slate-400">Featured cars</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-2xl font-bold text-white">ASP.NET 10</div>
+                <div class="text-slate-400">Runtime</div>
+            </div>
+            <div class="rounded-2xl bg-white/5 p-4">
+                <div class="text-2xl font-bold text-white">Tailwind</div>
+                <div class="text-slate-400">UI system</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="mt-12">
+    <div class="flex items-end justify-between gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-white">Featured models</h2>
+            <p class="mt-1 text-slate-400">Three showcase pages to start with, fully linked and ready to browse.</p>
+        </div>
+        <a href="/Home/Cars" class="text-sm font-semibold text-orange-300 hover:text-orange-200">See all cars</a>
+    </div>
+
+    <div class="mt-6 grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+        @foreach (var car in Model)
+        {
+            <article class="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80">
+                <img src="@car.HeroImage" alt="@car.DisplayName" class="h-64 w-full object-cover" />
+                <div class="space-y-4 p-6">
+                    <div class="flex items-center justify-between gap-3">
+                        <h3 class="page-title text-xl font-bold text-white">@car.DisplayName</h3>
+                        <span class="rounded-full bg-white/5 px-3 py-1 text-xs text-slate-300">@car.Segment</span>
+                    </div>
+                    <p class="page-copy text-sm leading-6 text-slate-400">@car.Description</p>
+                    <div class="flex flex-wrap gap-2 text-xs text-slate-300">
+                        <span class="rounded-full bg-white/5 px-3 py-1">@car.Powertrain</span>
+                        <span class="rounded-full bg-white/5 px-3 py-1">@car.Drivetrain</span>
+                        <span class="rounded-full bg-white/5 px-3 py-1">@car.TopSpeed</span>
+                    </div>
+                    <div class="mobile-stack">
+                        <a href="/Cars/@car.RouteBrand/@car.RouteModel" class="rounded-full bg-accent px-4 py-2 text-center text-sm font-semibold text-white">Open</a>
+                        <button class="rounded-full border border-white/10 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10" onclick="addToCart('@car.DisplayName', '@car.HeroImage')">
+                            Save to cart
+                        </button>
+                    </div>
+                </div>
+            </article>
+        }
+    </div>
+</section>

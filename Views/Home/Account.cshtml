@@ -1,0 +1,187 @@
+@model CarHub.Models.AccountViewModel
+@{
+    ViewData["Title"] = "Account";
+    var isSuccess = string.Equals(Model.MessageType, "success", StringComparison.OrdinalIgnoreCase);
+}
+
+<section class="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
+    <div class="rounded-3xl border border-white/10 bg-white/5 p-6 shadow-glow sm:p-8">
+        <span class="inline-flex rounded-full border border-blue-400/30 bg-blue-400/10 px-3 py-1 text-xs font-semibold uppercase tracking-[0.3em] text-blue-200">
+            Account access
+        </span>
+        <h1 class="page-title mt-5 text-4xl font-black text-white">Email login, reset codes, and social sign-in</h1>
+        <p class="page-copy mt-4 text-slate-300">
+            Create a CarHub account with email and password, sign in with the same email later, or request a reset code that expires after 15 minutes.
+        </p>
+
+        <div class="mt-6 grid gap-3 sm:grid-cols-2">
+            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div class="text-xs uppercase tracking-[0.3em] text-slate-500">Reset sender</div>
+                <div class="mt-2 text-lg font-semibold text-white">CarrHub@hotmail.com</div>
+                <div class="mt-1 text-sm text-slate-400">Used as the reset email sender name.</div>
+            </div>
+            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
+                <div class="text-xs uppercase tracking-[0.3em] text-slate-500">Reset code</div>
+                <div class="mt-2 text-lg font-semibold text-white">5 digits</div>
+                <div class="mt-1 text-sm text-slate-400">Single-use and expires in 15 minutes.</div>
+            </div>
+        </div>
+
+        @if (Model.IsAuthenticated)
+        {
+            <div class="mt-6 rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-100">
+                Signed in as <span class="font-semibold">@Model.SignedInEmail</span>.
+            </div>
+
+            <form asp-action="Logout" method="post" class="mt-4">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="rounded-full border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white transition hover:border-orange-400/40 hover:bg-white/10">
+                    Sign out
+                </button>
+            </form>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(Model.Message))
+        {
+            <div class="mt-6 rounded-2xl border p-4 text-sm @(isSuccess ? "border-emerald-400/20 bg-emerald-400/10 text-emerald-100" : "border-rose-400/20 bg-rose-400/10 text-rose-100")">
+                @Model.Message
+            </div>
+
+            @if (isSuccess && !string.IsNullOrWhiteSpace(Model.GeneratedResetCode))
+            {
+                <div class="mt-4 rounded-2xl border border-blue-400/20 bg-blue-400/10 p-4 text-sm text-blue-100">
+                    <div class="font-semibold">Reset code</div>
+                    <div class="mt-2 text-2xl font-black tracking-[0.35em]">@Model.GeneratedResetCode</div>
+                    <div class="mt-2 text-blue-100/80">
+                        If SMTP is not configured yet, this code is shown here for local testing.
+                    </div>
+                </div>
+            }
+        }
+    </div>
+
+    <div class="space-y-6">
+        <div class="grid gap-4 xl:grid-cols-2">
+            <form method="post" class="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-glow sm:p-7">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="FormAction" value="signup" />
+                <input type="hidden" asp-for="Provider" value="email" />
+                <h2 class="text-xl font-bold text-white">Create account</h2>
+                <p class="mt-2 text-sm text-slate-400">Use your email if you do not want Google or GitHub.</p>
+
+                <div class="mt-5 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="SignupEmail">Email</label>
+                        <input asp-for="Email" id="SignupEmail" autocomplete="email" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="you@example.com" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="SignupPassword">Password</label>
+                        <input asp-for="Password" id="SignupPassword" autocomplete="new-password" type="password" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="Create a password" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="SignupConfirm">Confirm password</label>
+                        <input asp-for="ConfirmPassword" id="SignupConfirm" autocomplete="new-password" type="password" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="Confirm your password" />
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-5 w-full rounded-full bg-accent px-5 py-3 font-semibold text-white transition hover:bg-orange-500">
+                    Sign up with email
+                </button>
+            </form>
+
+            <form method="post" class="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-glow sm:p-7">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="FormAction" value="signin" />
+                <h2 class="text-xl font-bold text-white">Sign in</h2>
+                <p class="mt-2 text-sm text-slate-400">Use the email and password you already created.</p>
+
+                <div class="mt-5 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="SigninEmail">Email</label>
+                        <input asp-for="Email" id="SigninEmail" autocomplete="email" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="you@example.com" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="SigninPassword">Password</label>
+                        <input asp-for="Password" id="SigninPassword" autocomplete="current-password" type="password" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="Your password" />
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-5 w-full rounded-full border border-white/10 bg-white/5 px-5 py-3 font-semibold text-white transition hover:border-orange-400/40 hover:bg-white/10">
+                    Sign in
+                </button>
+            </form>
+        </div>
+
+        <div class="grid gap-4 xl:grid-cols-2">
+            <form method="post" class="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-glow sm:p-7">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="FormAction" value="forgot" />
+                <h2 class="text-xl font-bold text-white">Forgot password</h2>
+                <p class="mt-2 text-sm text-slate-400">Enter your email and we will generate a fresh code if an account exists.</p>
+
+                <div class="mt-5 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="ForgotEmail">Email</label>
+                        <input asp-for="Email" id="ForgotEmail" autocomplete="email" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="you@example.com" />
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-5 w-full rounded-full bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500">
+                    Send reset code
+                </button>
+            </form>
+
+            <form method="post" class="rounded-3xl border border-white/10 bg-slate-900/80 p-6 shadow-glow sm:p-7">
+                @Html.AntiForgeryToken()
+                <input type="hidden" asp-for="FormAction" value="reset" />
+                <h2 class="text-xl font-bold text-white">Reset password</h2>
+                <p class="mt-2 text-sm text-slate-400">Use the code you received. It expires after 15 minutes and cannot be reused.</p>
+
+                <div class="mt-5 space-y-4">
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="ResetEmail">Email</label>
+                        <input asp-for="Email" id="ResetEmail" autocomplete="email" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="you@example.com" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="ResetCode">5-digit code</label>
+                        <input asp-for="ResetCode" id="ResetCode" inputmode="numeric" maxlength="5" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white tracking-[0.35em]" placeholder="12345" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="NewPassword">New password</label>
+                        <input asp-for="NewPassword" id="NewPassword" autocomplete="new-password" type="password" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="New password" />
+                    </div>
+
+                    <div class="space-y-2">
+                        <label class="text-sm font-semibold text-slate-200" for="ResetConfirm">Confirm new password</label>
+                        <input asp-for="ConfirmPassword" id="ResetConfirm" autocomplete="new-password" type="password" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white" placeholder="Confirm password" />
+                    </div>
+                </div>
+
+                <button type="submit" class="mt-5 w-full rounded-full bg-emerald-600 px-5 py-3 font-semibold text-white transition hover:bg-emerald-500">
+                    Confirm new password
+                </button>
+            </form>
+        </div>
+
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <div class="text-xs uppercase tracking-[0.3em] text-slate-500">Social sign-in</div>
+            <div class="mt-4 grid gap-3 sm:grid-cols-2">
+                <a asp-action="ExternalLogin" asp-route-provider="google" class="inline-flex w-full items-center justify-center rounded-full bg-blue-600 px-5 py-3 font-semibold text-white transition hover:bg-blue-500">
+                    Sign up with Google
+                </a>
+
+                <a asp-action="ExternalLogin" asp-route-provider="github" class="inline-flex w-full items-center justify-center rounded-full bg-slate-800 px-5 py-3 font-semibold text-white transition hover:bg-slate-700">
+                    Sign up with GitHub
+                </a>
+            </div>
+            <div class="mt-4 text-sm text-slate-400">
+                If the provider credentials are present in `appsettings.json`, these buttons now launch the real OAuth flow.
+            </div>
+        </div>
+    </div>
+</section>

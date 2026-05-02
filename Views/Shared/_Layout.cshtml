@@ -1,0 +1,107 @@
+@inject IConfiguration Configuration
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@ViewData["Title"] - CarHub</title>
+    <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        ink: "#07111f",
+                        panel: "#0f172a",
+                        accent: "#f97316",
+                        accent2: "#22c55e"
+                    },
+                    boxShadow: {
+                        glow: "0 20px 80px rgba(249,115,22,0.18)"
+                    }
+                }
+            }
+        };
+    </script>
+</head>
+    <body class="min-h-screen text-slate-100">
+    <header class="sticky top-0 z-50 border-b border-white/10 bg-slate-950/90 backdrop-blur">
+        <div class="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-4 sm:px-6 lg:px-8 md:flex-row md:items-center md:justify-between">
+            <a href="/" class="flex items-center gap-3 self-start">
+                <img src="~/images/logo.jpg" alt="CarHub logo" class="h-11 w-11 rounded-xl object-cover ring-1 ring-white/10" />
+                <div>
+                    <div class="text-lg font-semibold tracking-wide">CarHub</div>
+                    <div class="text-xs text-slate-400">Showcase garage</div>
+                </div>
+            </a>
+
+            <nav class="flex flex-wrap gap-x-4 gap-y-2 text-sm text-slate-300 md:items-center md:gap-6">
+                <a href="/" class="hover:text-white">Home</a>
+                <a href="/Home/Cars" class="hover:text-white">Cars</a>
+                <a href="/Home/Car3D" class="hover:text-white">3D Viewer</a>
+                <a href="/Home/Credits" class="hover:text-white">Credits</a>
+                <a href="/Home/Account" class="hover:text-white">Account</a>
+                <a href="/Home/Privacy" class="hover:text-white">Privacy</a>
+            </nav>
+
+            <div class="flex flex-wrap items-center gap-3">
+                @if (User?.Identity?.IsAuthenticated == true)
+                {
+                    <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-100">
+                        Signed in as @(User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name)
+                    </span>
+                    <form asp-controller="Home" asp-action="Logout" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-orange-400/40 hover:bg-white/10">
+                            Sign out
+                        </button>
+                    </form>
+                }
+
+                <a href="/Home/Cart" class="relative inline-flex w-fit items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-orange-400/40 hover:bg-white/10">
+                    <span>Cart</span>
+                    <span id="cartCount" class="inline-flex min-w-6 items-center justify-center rounded-full bg-accent px-2 py-0.5 text-xs font-semibold text-white">0</span>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        @RenderBody()
+    </main>
+
+    <footer class="border-t border-white/10 py-8 text-sm text-slate-400">
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-center">
+                <p>&copy; @DateTime.Now.Year CarHub. Made by Aarham. Licensed under Apache 2.0.</p>
+                <p><a class="text-orange-300 hover:text-orange-200" href="/Home/Account">Don't have an account? Create one.</a></p>
+                <p>Need info? <a class="text-orange-300 hover:text-orange-200" href="mailto:CarrHub@hotmail.com">CarrHub@hotmail.com</a></p>
+                <p>Stripe placeholder: @Configuration["Stripe:PublishableKey"]</p>
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        function updateCartCount() {
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+            const badge = document.getElementById("cartCount");
+            if (badge) {
+                badge.innerText = cart.length;
+            }
+        }
+
+        function addToCart(name, image) {
+            const cart = JSON.parse(localStorage.getItem("cart")) || [];
+            cart.push({ name, image });
+            localStorage.setItem("cart", JSON.stringify(cart));
+            updateCartCount();
+        }
+
+        updateCartCount();
+    </script>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

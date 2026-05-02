@@ -1,0 +1,25 @@
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 25px;
+    background: #0f172a;
+    border-bottom: 1px solid #1f2937;
+}
+
+.navbar a {
+    color: var(--text);
+    text-decoration: none;
+    margin: 0 10px;
+}
+
+.navbar a:hover {
+    color: var(--accent);
+}
+
+.footer {
+    text-align: center;
+    padding: 20px;
+    color: var(--muted);
+    border-top: 1px solid #1f2937;
+}

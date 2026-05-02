@@ -1,0 +1,13 @@
+:root {
+    --bg: #0b0f1a;
+    --card: #121a2a;
+    --text: #ffffff;
+    --muted: #9aa4b2;
+
+    --primary: #ff3b3b;
+    --accent: #3b82f6;
+
+    --success: #22c55e;
+    --danger: #ef4444;
+    --warning: #f59e0b;
+}

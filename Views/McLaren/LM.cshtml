@@ -1,0 +1,7 @@
+@model CarHub.Models.CarDetailViewModel
+@{
+    ViewData["Title"] = Model.DisplayName;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@await Html.PartialAsync("~/Views/Home/Car.cshtml", Model)

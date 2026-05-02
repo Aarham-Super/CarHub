@@ -1,0 +1,59 @@
+@{
+    ViewData["Title"] = "Cart";
+}
+
+<div class="flex items-end justify-between gap-4">
+    <div>
+        <h1 class="text-3xl font-black text-white">Your cart</h1>
+        <p class="mt-2 text-slate-400">Saved locally in the browser, so it keeps working without a backend checkout yet.</p>
+    </div>
+    <button class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10" onclick="clearCart()">
+        Clear cart
+    </button>
+</div>
+
+<div id="cartItems" class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
+
+<script>
+    const container = document.getElementById("cartItems");
+
+    function loadCart() {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+        if (cart.length === 0) {
+            container.innerHTML = `
+                <div class="rounded-3xl border border-white/10 bg-white/5 p-8 text-slate-300 md:col-span-2 xl:col-span-3">
+                    Your cart is empty.
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = cart.map((item, index) => `
+            <article class="overflow-hidden rounded-3xl border border-white/10 bg-white/5">
+                <img src="${item.image}" alt="${item.name}" class="h-56 w-full object-cover" />
+                <div class="space-y-4 p-6">
+                    <h2 class="text-xl font-bold text-white">${item.name}</h2>
+                    <button class="rounded-full bg-rose-500 px-4 py-2 text-sm font-semibold text-white" onclick="removeItem(${index})">
+                        Remove
+                    </button>
+                </div>
+            </article>
+        `).join("");
+    }
+
+    function removeItem(index) {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        cart.splice(index, 1);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        loadCart();
+        updateCartCount();
+    }
+
+    function clearCart() {
+        localStorage.removeItem("cart");
+        loadCart();
+        updateCartCount();
+    }
+
+    loadCart();
+</script>

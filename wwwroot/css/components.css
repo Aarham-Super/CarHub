@@ -1,0 +1,32 @@
+button {
+    background: var(--primary);
+    border: none;
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: white;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #ff1f1f;
+}
+
+input {
+    padding: 8px;
+    border-radius: 6px;
+    border: none;
+}
+
+.badge {
+    padding: 4px 8px;
+    border-radius: 5px;
+    font-size: 12px;
+}
+
+.badge-danger {
+    background: var(--danger);
+}
+
+.badge-warning {
+    background: var(--warning);
+}
