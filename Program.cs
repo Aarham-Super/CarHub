@@ -19,6 +19,7 @@ builder.Services.AddControllersWithViews();
 
 builder.Services.AddSingleton<CarCatalogService>();
 builder.Services.AddSingleton<LocalAccountService>();
+builder.Services.AddHttpClient<StripeCheckoutService>();
 
 builder.Services
     .AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)

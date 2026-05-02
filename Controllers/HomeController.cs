@@ -12,12 +12,18 @@ namespace CarHub.Controllers
     {
         private readonly CarCatalogService _catalog;
         private readonly LocalAccountService _accounts;
+        private readonly StripeCheckoutService _stripeCheckout;
         private readonly IConfiguration _configuration;
 
-        public HomeController(CarCatalogService catalog, LocalAccountService accounts, IConfiguration configuration)
+        public HomeController(
+            CarCatalogService catalog,
+            LocalAccountService accounts,
+            StripeCheckoutService stripeCheckout,
+            IConfiguration configuration)
         {
             _catalog = catalog;
             _accounts = accounts;
+            _stripeCheckout = stripeCheckout;
             _configuration = configuration;
         }
 
@@ -48,6 +54,7 @@ namespace CarHub.Controllers
         public IActionResult Cart()
         {
             ViewData["Title"] = "Cart";
+            ViewData["StripeReady"] = _stripeCheckout.IsConfigured();
             return View();
         }
 
@@ -186,6 +193,37 @@ namespace CarHub.Controllers
         {
             ViewData["Title"] = "EULA";
             return View();
+        }
+
+        [HttpPost]
+        [AllowAnonymous]
+        public async Task<IActionResult> CreateCheckoutSession([FromBody] CartCheckoutRequest request, CancellationToken cancellationToken)
+        {
+            if (!_stripeCheckout.IsConfigured())
+            {
+                return BadRequest(new { error = "Stripe is not configured." });
+            }
+
+            var quantity = Math.Max(request.Quantity, 0);
+            if (quantity <= 0)
+            {
+                return BadRequest(new { error = "Cart is empty." });
+            }
+
+            var customerEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
+            var baseUrl = $"{Request.Scheme}://{Request.Host}";
+            var successUrl = $"{baseUrl}/Home/Cart?checkout=success";
+            var cancelUrl = $"{baseUrl}/Home/Cart?checkout=cancel";
+
+            try
+            {
+                var url = await _stripeCheckout.CreateCheckoutUrlAsync(successUrl, cancelUrl, quantity, customerEmail, cancellationToken);
+                return Ok(new { url });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { error = ex.Message });
+            }
         }
 
         [HttpGet]

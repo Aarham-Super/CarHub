@@ -1,24 +1,35 @@
 @{
     ViewData["Title"] = "Cart";
+    var stripeReady = ViewData["StripeReady"] as bool? ?? false;
 }
 
-<div class="flex items-end justify-between gap-4">
+<div class="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
     <div>
         <h1 class="text-3xl font-black text-white">Your cart</h1>
         <p class="mt-2 text-slate-400">Saved locally in the browser, so it keeps working without a backend checkout yet.</p>
     </div>
-    <button class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10" onclick="clearCart()">
-        Clear cart
-    </button>
+    <div class="flex flex-wrap gap-3">
+        <button id="payNowBtn" class="rounded-full bg-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 transition" onclick="payNow()" disabled>
+            Pay Now
+        </button>
+        <button class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:bg-white/10" onclick="clearCart()">
+            Clear cart
+        </button>
+    </div>
 </div>
 
+<div id="checkoutBanner" class="mt-6 hidden rounded-2xl border border-emerald-400/20 bg-emerald-400/10 p-4 text-sm text-emerald-100"></div>
 <div id="cartItems" class="mt-8 grid gap-6 md:grid-cols-2 xl:grid-cols-3"></div>
 
 <script>
     const container = document.getElementById("cartItems");
+    const payNowBtn = document.getElementById("payNowBtn");
+    const checkoutBanner = document.getElementById("checkoutBanner");
+    const stripeReady = @stripeReady.ToString().ToLowerInvariant();
 
     function loadCart() {
         const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        updatePayNowState(cart.length);
 
         if (cart.length === 0) {
             container.innerHTML = `
@@ -55,5 +66,56 @@
         updateCartCount();
     }
 
+    function updatePayNowState(count) {
+        if (!payNowBtn) return;
+
+        if (count > 0 && stripeReady) {
+            payNowBtn.disabled = false;
+            payNowBtn.className = "rounded-full bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-emerald-500";
+        } else {
+            payNowBtn.disabled = true;
+            payNowBtn.className = "rounded-full bg-slate-600 px-4 py-2 text-sm font-semibold text-slate-300 transition";
+        }
+    }
+
+    async function payNow() {
+        const cart = JSON.parse(localStorage.getItem("cart")) || [];
+        if (cart.length === 0 || !stripeReady) return;
+
+        payNowBtn.disabled = true;
+        payNowBtn.innerText = "Loading...";
+
+        try {
+            const response = await fetch("/Home/CreateCheckoutSession", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ quantity: cart.length })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || "Unable to start checkout.");
+            }
+
+            window.location.href = data.url;
+        } catch (error) {
+            if (checkoutBanner) {
+                checkoutBanner.textContent = error.message || "Unable to start checkout.";
+                checkoutBanner.classList.remove("hidden");
+            }
+            updatePayNowState(cart.length);
+            payNowBtn.innerText = "Pay Now";
+        }
+    }
+
+    if (new URLSearchParams(window.location.search).get("checkout") === "success") {
+        localStorage.removeItem("cart");
+        if (checkoutBanner) {
+            checkoutBanner.textContent = "Payment completed successfully.";
+            checkoutBanner.classList.remove("hidden");
+        }
+    }
+
     loadCart();
+    payNowBtn.innerText = "Pay Now";
 </script>
