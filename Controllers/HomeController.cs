@@ -94,8 +94,15 @@ namespace CarHub.Controllers
                 "signin" => await SignIn(model),
                 "forgot" => RequestReset(model),
                 "reset" => ResetPassword(model),
+                "profile" => UpdateProfile(model),
+                "twofactor" => ToggleTwoFactor(model),
                 _ => Placeholder("Choose a sign-up, sign-in, or reset action.")
             };
+
+            if (result.IsSuccess && (action == "profile" || action == "twofactor"))
+            {
+                await SignInAsync(result);
+            }
 
             ApplyResultToModel(model, result);
             ViewData["Title"] = "Account";
@@ -136,7 +143,7 @@ namespace CarHub.Controllers
 
             var properties = new AuthenticationProperties
             {
-                RedirectUri = Url.Action(nameof(ExternalLoginCallback), "Home", new { returnUrl }) ?? "/Home/Account"
+                RedirectUri = Url.Action(nameof(ExternalLoginCallback), "Home", new { returnUrl, provider = normalizedProvider }) ?? "/Home/Account"
             };
 
             return Challenge(properties, scheme);
@@ -144,7 +151,7 @@ namespace CarHub.Controllers
 
         [HttpGet]
         [AllowAnonymous]
-        public async Task<IActionResult> ExternalLoginCallback(string returnUrl = "/Home/Account")
+        public async Task<IActionResult> ExternalLoginCallback(string provider, string returnUrl = "/Home/Account")
         {
             var external = await HttpContext.AuthenticateAsync("External");
             if (!external.Succeeded || external.Principal is null)
@@ -154,20 +161,37 @@ namespace CarHub.Controllers
                 return RedirectToAction(nameof(Account));
             }
 
+            var normalizedProvider = (provider ?? string.Empty).Trim().ToLowerInvariant();
+            var providerKey = external.Principal.FindFirstValue(ClaimTypes.NameIdentifier) ?? string.Empty;
             var email = external.Principal.FindFirstValue(ClaimTypes.Email);
+            var displayName = external.Principal.FindFirstValue(ClaimTypes.Name)
+                ?? external.Principal.FindFirstValue("urn:github:login")
+                ?? external.Principal.FindFirstValue(ClaimTypes.GivenName)
+                ?? email;
+            var pictureUrl = external.Principal.FindFirstValue("urn:google:picture")
+                ?? external.Principal.FindFirstValue("urn:github:avatar");
+
             if (string.IsNullOrWhiteSpace(email))
             {
-                var loginName = external.Principal.FindFirstValue(ClaimTypes.Name)
-                    ?? external.Principal.FindFirstValue("urn:github:login")
+                var loginName = external.Principal.FindFirstValue("urn:github:login")
+                    ?? external.Principal.FindFirstValue(ClaimTypes.Name)
                     ?? external.Principal.FindFirstValue(ClaimTypes.NameIdentifier);
                 email = $"{loginName}@social.carhub.local";
             }
 
             await HttpContext.SignOutAsync("External");
-            await SignInAsync(email);
+            var result = _accounts.UpsertExternalAccount(normalizedProvider, providerKey, email, displayName, displayName, pictureUrl);
+            if (!result.IsSuccess)
+            {
+                TempData["AccountMessageType"] = "error";
+                TempData["AccountMessage"] = result.Message;
+                return RedirectToAction(nameof(Account));
+            }
+
+            await SignInAsync(result);
 
             TempData["AccountMessageType"] = "success";
-            TempData["AccountMessage"] = $"Signed in with {email}.";
+            TempData["AccountMessage"] = $"Signed in with {result.Email}.";
 
             if (Url.IsLocalUrl(returnUrl))
             {
@@ -262,7 +286,10 @@ namespace CarHub.Controllers
         [HttpGet]
         public IActionResult Error(int statusCode = 404)
         {
+            // Set the response status so the browser knows this is an error
             Response.StatusCode = statusCode;
+
+            ViewData["StatusCode"] = statusCode;
             ViewData["Title"] = statusCode switch
             {
                 400 => "Bad request",
@@ -273,12 +300,11 @@ namespace CarHub.Controllers
                 _ => "Error"
             };
 
-            ViewData["StatusCode"] = statusCode;
             ViewData["Message"] = statusCode switch
             {
                 400 => "The request could not be understood.",
                 401 => "You need to sign in to access this page.",
-                403 => "Access to that resource is blocked.",
+                403 => "Access to that resource is blocked for security reasons.",
                 404 => "We could not find the page you requested.",
                 500 => "CarHub hit a server error. Please try again.",
                 _ => "Something went wrong."
@@ -289,10 +315,18 @@ namespace CarHub.Controllers
 
         private AccountViewModel BuildAccountViewModel()
         {
+            var email = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name;
+            var profile = !string.IsNullOrWhiteSpace(email) ? _accounts.GetProfile(email) : null;
+
             return new AccountViewModel
             {
                 IsAuthenticated = User.Identity?.IsAuthenticated == true,
-                SignedInEmail = User.FindFirstValue(ClaimTypes.Email) ?? User.Identity?.Name
+                SignedInEmail = profile?.Email ?? email,
+                UserName = profile?.UserName ?? User.FindFirstValue(ClaimTypes.Name),
+                DisplayName = profile?.DisplayName ?? User.FindFirstValue(ClaimTypes.Name),
+                SignedInProvider = profile?.Provider ?? User.FindFirstValue("urn:carhub:provider"),
+                TwoFactorEnabled = profile?.TwoFactorEnabled ?? false,
+                PasskeyCount = profile?.PasskeyCount ?? 0
             };
         }
 
@@ -328,20 +362,20 @@ namespace CarHub.Controllers
                 return result;
             }
 
-            await SignInAsync(result.Email);
-            return LocalAccountService.AuthResult.Ok(result.Email, result.Message);
+            await SignInAsync(result);
+            return result;
         }
 
         private async Task<LocalAccountService.AuthResult> SignUp(AccountViewModel model)
         {
-            var result = _accounts.Register(model.Email, model.Password, model.ConfirmPassword);
+            var result = _accounts.Register(model.Email, model.Password, model.ConfirmPassword, model.DisplayName, model.AcceptTerms);
             if (!result.IsSuccess)
             {
                 return result;
             }
 
-            await SignInAsync(result.Email);
-            return LocalAccountService.AuthResult.Ok(result.Email, result.Message);
+            await SignInAsync(result);
+            return result;
         }
 
         private LocalAccountService.AuthResult RequestReset(AccountViewModel model)
@@ -354,12 +388,25 @@ namespace CarHub.Controllers
             return _accounts.ResetPassword(model.Email, model.ResetCode, model.NewPassword, model.ConfirmPassword);
         }
 
-        private async Task SignInAsync(string email)
+        private LocalAccountService.AuthResult UpdateProfile(AccountViewModel model)
+        {
+            return _accounts.UpdateProfile(model.Email, model.DisplayName);
+        }
+
+        private LocalAccountService.AuthResult ToggleTwoFactor(AccountViewModel model)
+        {
+            return _accounts.ToggleTwoFactor(model.Email, model.TwoFactorEnabled);
+        }
+
+        private async Task SignInAsync(LocalAccountService.AuthResult result)
         {
             var claims = new List<Claim>
             {
-                new(ClaimTypes.Name, email),
-                new(ClaimTypes.Email, email)
+                new(ClaimTypes.Name, result.UserName),
+                new(ClaimTypes.Email, result.Email),
+                new("urn:carhub:username", result.UserName),
+                new("urn:carhub:provider", result.Provider),
+                new(ClaimTypes.GivenName, result.DisplayName)
             };
 
             var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
@@ -379,7 +426,12 @@ namespace CarHub.Controllers
             model.Message = result.Message;
             model.MessageType = result.IsSuccess ? "success" : "error";
             model.IsAuthenticated = User.Identity?.IsAuthenticated == true || result.IsSuccess;
-            model.SignedInEmail = result.IsSuccess ? (result.Email ?? model.SignedInEmail) : model.SignedInEmail;
+            model.SignedInEmail = result.IsSuccess ? result.Email : model.SignedInEmail;
+            model.UserName = result.IsSuccess ? result.UserName : model.UserName;
+            model.DisplayName = result.IsSuccess ? result.DisplayName : model.DisplayName;
+            model.SignedInProvider = result.IsSuccess ? result.Provider : model.SignedInProvider;
+            model.TwoFactorEnabled = result.IsSuccess ? result.TwoFactorEnabled : model.TwoFactorEnabled;
+            model.PasskeyCount = result.IsSuccess ? result.PasskeyCount : model.PasskeyCount;
             model.ResetSender = result.Sender;
             model.ResetExpiresAt = result.ExpiresAt;
             model.GeneratedResetCode = result.ResetCode;

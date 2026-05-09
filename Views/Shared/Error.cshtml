@@ -1,25 +1,33 @@
 ﻿@model ErrorViewModel
 @{
-    ViewData["Title"] = "Error";
+    // Retrieve the data passed from HomeController
+    var statusCode = ViewData["StatusCode"]?.ToString();
+    var title = ViewData["Title"]?.ToString() ?? "Error";
+    var message = ViewData["Message"]?.ToString() ?? "An error occurred.";
 }
 
-<h1 class="text-danger">Error.</h1>
-<h2 class="text-danger">An error occurred while processing your request.</h2>
+<div class="text-center mt-5">
+    <!-- This heading will show '404' or '403' -->
+    <h1 class="display-1 fw-bold @(statusCode == "403" ? "text-danger" : "text-warning")">
+        @statusCode
+    </h1>
 
-@if (Model.ShowRequestId)
-{
-    <p>
-        <strong>Request ID:</strong> <code>@Model.RequestId</code>
-    </p>
-}
+    <!-- This will show 'Page not found' or 'Forbidden' -->
+    <h2 class="mb-3">@title</h2>
 
-<h3>Development Mode</h3>
-<p>
-    Swapping to <strong>Development</strong> environment will display more detailed information about the error that occurred.
-</p>
-<p>
-    <strong>The Development environment shouldn't be enabled for deployed applications.</strong>
-    It can result in displaying sensitive information from exceptions to end users.
-    For local debugging, enable the <strong>Development</strong> environment by setting the <strong>ASPNETCORE_ENVIRONMENT</strong> environment variable to <strong>Development</strong>
-    and restarting the app.
-</p>
+    <!-- This will show your custom text for 403 or 404 -->
+    <p class="lead mb-4">@message</p>
+
+    <div class="mt-4 d-grid gap-2 d-md-block">
+        <a href="/" class="btn btn-primary px-4 me-md-2">Back home</a>
+        <a href="/Home/Cars" class="btn btn-outline-secondary px-4">Browse cars</a>
+        <a href="/Home/Account" class="btn btn-outline-secondary px-4">Account</a>
+    </div>
+
+    @if (Model?.ShowRequestId == true)
+    {
+        <p class="mt-5 small text-muted">
+            <strong>Request ID:</strong> <code>@Model.RequestId</code>
+        </p>
+    }
+</div>

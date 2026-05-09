@@ -2,6 +2,7 @@
 bin/
 obj/
 publish/
+publish-clean/
 
 # Visual Studio
 .vs/
@@ -12,6 +13,8 @@ publish/
 appsettings*.json
 App_Data/
 CarHub.db
+carhub-cache.db
+accounts.db
 *.log
 
 # OS / editor noise

@@ -29,4 +29,16 @@ public sealed class AccountViewModel
     public bool IsAuthenticated { get; set; }
 
     public string? SignedInEmail { get; set; }
+
+    public string? UserName { get; set; }
+
+    public string? DisplayName { get; set; }
+
+    public string? SignedInProvider { get; set; }
+
+    public bool TwoFactorEnabled { get; set; }
+
+    public int PasskeyCount { get; set; }
+
+    public bool AcceptTerms { get; set; }
 }

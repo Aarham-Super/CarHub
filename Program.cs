@@ -9,11 +9,9 @@ using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
 
-//
 // =========================
 // 🔧 SERVICES
 // =========================
-//
 
 builder.Services.AddControllersWithViews();
 
@@ -166,24 +164,17 @@ builder.Services.AddAuthentication()
         };
     });
 
-// Bind configuration for future payment and storage wiring.
-builder.Services.Configure<StripeSettings>(
-    builder.Configuration.GetSection("Stripe")
-);
+builder.Services.Configure<StripeSettings>(builder.Configuration.GetSection("Stripe"));
 
-//
 // =========================
 // 🚀 BUILD APP
 // =========================
-//
 
 var app = builder.Build();
 
-//
 // =========================
 // 🌐 MIDDLEWARE PIPELINE
 // =========================
-//
 
 if (!app.Environment.IsDevelopment())
 {
@@ -192,28 +183,30 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseStaticFiles();
 
+// 1. Important: Use StatusCodePages FIRST so it can intercept the 403 we throw below
+app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
+
+app.UseStaticFiles();
 app.UseRouting();
 
+// 2. Custom check for sensitive files
 app.Use(async (context, next) =>
 {
     var path = context.Request.Path.Value?.ToLowerInvariant();
-    if (!string.IsNullOrWhiteSpace(path) && (path == "/appsettings.json" || path.StartsWith("/appsettings.", StringComparison.Ordinal)))
+    if (!string.IsNullOrWhiteSpace(path) && (path.Contains("appsettings.json")))
     {
+        // We set the code, and StatusCodePagesWithReExecute will handle the redirect
         context.Response.StatusCode = StatusCodes.Status403Forbidden;
-        return;
+        return; 
     }
 
     await next();
 });
 
-app.UseStatusCodePagesWithReExecute("/Home/Error", "?statusCode={0}");
-
 app.UseAuthentication();
 app.UseAuthorization();
 
-//
 // =========================
 // 🚗 ROUTES
 // =========================

@@ -2,462 +2,109 @@
     ViewData["Title"] = "3D Car Viewer";
 }
 
-<section class="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-    <div class="space-y-4">
-        <div>
-            <h1 class="page-title text-3xl font-black text-white">3D car configurator</h1>
-            <p class="page-copy mt-2 max-w-2xl text-slate-400">
-                Drag or swipe to rotate the model, scroll to zoom, and change body, rim, and brake colors while switching between Urus and Huracan presets.
-            </p>
+<section class="space-y-6">
+    <div class="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+        <div class="space-y-4">
+            <div>
+                <h1 class="page-title text-3xl font-black text-white">Real 3D car viewer</h1>
+                <p class="page-copy mt-2 max-w-2xl text-slate-400">
+                    This viewer now uses real Sketchfab car models instead of a block placeholder. Each selection loads a different vehicle so the page actually feels like a 3D garage.
+                </p>
+            </div>
+
+            <div class="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 p-3 shadow-glow sm:p-4">
+                <iframe id="sketchfabViewer"
+                        title="CarHub 3D model viewer"
+                        class="h-[420px] w-full rounded-2xl border border-white/10 bg-black sm:h-[620px]"
+                        allow="autoplay; fullscreen; xr-spatial-tracking"
+                        allowfullscreen
+                        mozallowfullscreen="true"
+                        webkitallowfullscreen="true"
+                        src="https://sketchfab.com/models/c45388786e7148e4be197913820808d1/embed?autostart=1&autospin=0.2&camera=0&transparent=1&ui_infos=0&ui_controls=1">
+                </iframe>
+            </div>
         </div>
 
-        <div class="overflow-hidden rounded-3xl border border-white/10 bg-slate-900/80 p-3 shadow-glow sm:p-4">
-            <canvas id="viewer" class="h-[360px] w-full overflow-hidden rounded-2xl border border-white/10 bg-slate-950 sm:h-[540px]"></canvas>
-        </div>
+        <aside class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
+            <div>
+                <h2 class="text-2xl font-bold text-white">Model selector</h2>
+                <p class="mt-1 text-sm text-slate-400">Pick a real model. These are different files, not the same geometry with a different label.</p>
+            </div>
+
+            <div class="space-y-3">
+                <button type="button" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-left transition hover:border-orange-400/40 hover:bg-white/5" onclick="setModel('urus')">
+                    <div class="font-semibold text-white">Lamborghini Urus</div>
+                    <div class="text-sm text-slate-400">Sketchfab model, CC Attribution</div>
+                </button>
+                <button type="button" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-left transition hover:border-orange-400/40 hover:bg-white/5" onclick="setModel('huracan')">
+                    <div class="font-semibold text-white">Lamborghini Huracan</div>
+                    <div class="text-sm text-slate-400">Sketchfab model, CC Attribution</div>
+                </button>
+                <button type="button" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-left transition hover:border-orange-400/40 hover:bg-white/5" onclick="setModel('supercar')">
+                    <div class="font-semibold text-white">Supercar</div>
+                    <div class="text-sm text-slate-400">High-detail car model, CC Attribution</div>
+                </button>
+                <button type="button" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-left transition hover:border-orange-400/40 hover:bg-white/5" onclick="setModel('suv')">
+                    <div class="font-semibold text-white">SUV</div>
+                    <div class="text-sm text-slate-400">Realistic SUV model, CC Attribution</div>
+                </button>
+            </div>
+
+            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4 text-sm leading-6 text-slate-300">
+                Drag inside the viewer to rotate, scroll to zoom, and use fullscreen if you want a closer look.
+            </div>
+        </aside>
     </div>
 
-    <aside class="space-y-4 rounded-3xl border border-white/10 bg-white/5 p-6">
-        <div>
-            <h2 class="text-2xl font-bold text-white">Configurator</h2>
-            <p class="mt-1 text-sm text-slate-400">This viewer is self-contained, so it works even when CDNs or external model files are blocked.</p>
+    <div class="grid gap-4 md:grid-cols-2">
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <div class="text-xs uppercase tracking-[0.3em] text-slate-500">Source</div>
+            <div id="viewerLabel" class="mt-2 text-xl font-bold text-white">Lamborghini Urus</div>
+            <p id="viewerCredit" class="mt-2 text-sm leading-6 text-slate-400">
+                Sketchfab model by idan kuzi, licensed CC Attribution.
+            </p>
         </div>
-
-        <label class="block space-y-2">
-            <span class="text-sm font-semibold text-slate-200">Model preset</span>
-            <select id="preset" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white">
-                <option value="urus">Lamborghini Urus</option>
-                <option value="urusS">Lamborghini Urus S</option>
-                <option value="urusSE">Lamborghini Urus SE</option>
-                <option value="huracan">Lamborghini Huracan</option>
-            </select>
-        </label>
-
-        <label class="block space-y-2">
-            <span class="text-sm font-semibold text-slate-200">Body color</span>
-            <div class="grid grid-cols-4 gap-2">
-                <button class="h-12 rounded-2xl border border-white/10 bg-orange-500" onclick="setBodyColor('#f97316')" aria-label="Orange body color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-slate-100" onclick="setBodyColor('#e2e8f0')" aria-label="Silver body color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-emerald-500" onclick="setBodyColor('#22c55e')" aria-label="Green body color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-red-500" onclick="setBodyColor('#ef4444')" aria-label="Red body color"></button>
-            </div>
-        </label>
-
-        <label class="block space-y-2">
-            <span class="text-sm font-semibold text-slate-200">Rim color</span>
-            <div class="grid grid-cols-4 gap-2">
-                <button class="h-12 rounded-2xl border border-white/10 bg-zinc-100" onclick="setRimColor('#e4e4e7')" aria-label="Light rim color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-zinc-500" onclick="setRimColor('#71717a')" aria-label="Gray rim color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-zinc-800" onclick="setRimColor('#27272a')" aria-label="Dark rim color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-amber-400" onclick="setRimColor('#fbbf24')" aria-label="Gold rim color"></button>
-            </div>
-        </label>
-
-        <label class="block space-y-2">
-            <span class="text-sm font-semibold text-slate-200">Brake / caliper color</span>
-            <div class="grid grid-cols-4 gap-2">
-                <button class="h-12 rounded-2xl border border-white/10 bg-red-500" onclick="setBrakeColor('#ef4444')" aria-label="Red brake color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-blue-500" onclick="setBrakeColor('#3b82f6')" aria-label="Blue brake color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-white" onclick="setBrakeColor('#f8fafc')" aria-label="White brake color"></button>
-                <button class="h-12 rounded-2xl border border-white/10 bg-yellow-500" onclick="setBrakeColor('#eab308')" aria-label="Yellow brake color"></button>
-            </div>
-        </label>
-
-        <label class="block space-y-2">
-            <span class="text-sm font-semibold text-slate-200">Engine mode</span>
-            <select id="engineMode" class="w-full rounded-2xl border border-white/10 bg-slate-950 px-4 py-3 text-white">
-                <option value="standard">Standard</option>
-                <option value="sport">Sport</option>
-                <option value="track">Track</option>
-                <option value="hybrid">Hybrid boost</option>
-            </select>
-        </label>
-
-        <div class="grid grid-cols-2 gap-3">
-            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-                <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Status</div>
-                <div id="statusLabel" class="mt-2 text-sm font-semibold text-white">Urus ready</div>
-            </div>
-            <div class="rounded-2xl border border-white/10 bg-slate-950/70 p-4">
-                <div class="text-xs uppercase tracking-[0.25em] text-slate-500">Upgrade</div>
-                <div id="upgradeLabel" class="mt-2 text-sm font-semibold text-white">EMS off</div>
-            </div>
+        <div class="rounded-3xl border border-white/10 bg-white/5 p-6">
+            <div class="text-xs uppercase tracking-[0.3em] text-slate-500">Why this is better</div>
+            <p class="mt-2 text-sm leading-6 text-slate-400">
+                The old viewer was drawn from simple geometry. This one loads full authored models from an external 3D host, which is why it looks like an actual car instead of a placeholder.
+            </p>
         </div>
-
-        <button id="upgradeBtn" class="w-full rounded-full bg-accent px-5 py-3 font-semibold text-white transition hover:bg-orange-500" onclick="toggleUpgrade()">
-            Toggle EMS upgrade
-        </button>
-
-        <div class="rounded-2xl border border-white/10 bg-white/5 p-4 text-sm leading-6 text-slate-300">
-            Drag to rotate, scroll to zoom, and tap buttons to switch presets and colors.
-        </div>
-    </aside>
+    </div>
 </section>
 
 <script>
-    const presets = {
-        urus: { title: "Urus", body: "#f97316", rim: "#27272a", brake: "#ef4444", engine: "standard", scale: 1.15, height: 1.0, width: 1.0, wheel: 0.26, hood: 1.65, roof: 0.7 },
-        urusS: { title: "Urus S", body: "#e2e8f0", rim: "#71717a", brake: "#3b82f6", engine: "sport", scale: 1.15, height: 1.01, width: 1.0, wheel: 0.265, hood: 1.66, roof: 0.7 },
-        urusSE: { title: "Urus SE", body: "#22c55e", rim: "#e4e4e7", brake: "#eab308", engine: "hybrid", scale: 1.17, height: 1.03, width: 1.02, wheel: 0.265, hood: 1.68, roof: 0.72 },
-        huracan: { title: "Huracan", body: "#ef4444", rim: "#27272a", brake: "#f8fafc", engine: "track", scale: 1.0, height: 0.74, width: 0.92, wheel: 0.22, hood: 1.35, roof: 0.5 }
+    const models = {
+        urus: {
+            src: "https://sketchfab.com/models/c45388786e7148e4be197913820808d1/embed?autostart=1&autospin=0.2&camera=0&transparent=1&ui_infos=0&ui_controls=1",
+            label: "Lamborghini Urus",
+            credit: "Sketchfab model by idan kuzi, licensed CC Attribution."
+        },
+        huracan: {
+            src: "https://sketchfab.com/models/b2f5c24c44fd417fb89286603af9b5a5/embed?autostart=1&autospin=0.2&camera=0&transparent=1&ui_infos=0&ui_controls=1",
+            label: "Lamborghini Huracan",
+            credit: "Sketchfab model by jpo1703, licensed CC Attribution."
+        },
+        supercar: {
+            src: "https://sketchfab.com/models/e0d1c15886c443e3afce1347979d36fe/embed?autostart=1&autospin=0.2&camera=0&transparent=1&ui_infos=0&ui_controls=1",
+            label: "Supercar",
+            credit: "Sketchfab model by Nordener, licensed CC Attribution."
+        },
+        suv: {
+            src: "https://sketchfab.com/models/b3749cb36f674e359b6b204fa8ffcf55/embed?autostart=1&autospin=0.2&camera=0&transparent=1&ui_infos=0&ui_controls=1",
+            label: "SUV",
+            credit: "Sketchfab model by ShreyanshChaurasia_13, licensed CC Attribution."
+        }
     };
 
-    const viewer = document.getElementById("viewer");
-    const ctx = viewer.getContext("2d");
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    let currentPreset = presets.urus;
-    let bodyColor = hexToRgb("#f97316");
-    let rimColor = hexToRgb("#27272a");
-    let brakeColor = hexToRgb("#ef4444");
-    let emsUpgraded = false;
-    let yaw = -0.65;
-    let pitch = 0.12;
-    let zoom = 1.0;
-    let dragState = null;
+    function setModel(key) {
+        const model = models[key] || models.urus;
+        const iframe = document.getElementById("sketchfabViewer");
+        const label = document.getElementById("viewerLabel");
+        const credit = document.getElementById("viewerCredit");
 
-    function resizeCanvas() {
-        const rect = viewer.getBoundingClientRect();
-        viewer.width = Math.max(1, Math.floor(rect.width * dpr));
-        viewer.height = Math.max(1, Math.floor(rect.height * dpr));
-        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        iframe.src = model.src;
+        label.textContent = model.label;
+        credit.textContent = model.credit;
     }
-
-    function hexToRgb(hex) {
-        const value = hex.replace("#", "");
-        return {
-            r: parseInt(value.slice(0, 2), 16),
-            g: parseInt(value.slice(2, 4), 16),
-            b: parseInt(value.slice(4, 6), 16)
-        };
-    }
-
-    function rgbToHex(color) {
-        return "#" + [color.r, color.g, color.b].map((value) => value.toString(16).padStart(2, "0")).join("");
-    }
-
-    function mixColor(base, mix, amount) {
-        return {
-            r: Math.round(base.r + (mix.r - base.r) * amount),
-            g: Math.round(base.g + (mix.g - base.g) * amount),
-            b: Math.round(base.b + (mix.b - base.b) * amount)
-        };
-    }
-
-    function shade(color, amount) {
-        return rgbToHex(mixColor(color, { r: 255, g: 255, b: 255 }, amount));
-    }
-
-    function rotatePoint(point, state) {
-        const cosYaw = Math.cos(state.yaw);
-        const sinYaw = Math.sin(state.yaw);
-        const cosPitch = Math.cos(state.pitch);
-        const sinPitch = Math.sin(state.pitch);
-
-        const x1 = point.x * cosYaw - point.z * sinYaw;
-        const z1 = point.x * sinYaw + point.z * cosYaw;
-        const y1 = point.y * cosPitch - z1 * sinPitch;
-        const z2 = point.y * sinPitch + z1 * cosPitch;
-
-        return { x: x1, y: y1, z: z2 };
-    }
-
-    function project(point, state) {
-        const rotated = rotatePoint(point, state);
-        const distance = 5.4 / (zoom * state.zoom);
-        const perspective = distance / (distance + rotated.z + 5.8);
-        const centerX = viewer.clientWidth / 2;
-        const centerY = viewer.clientHeight / 2 + state.verticalOffset;
-        return {
-            x: centerX + rotated.x * state.scale * perspective * state.perspectiveScale,
-            y: centerY - rotated.y * state.scale * perspective * state.perspectiveScale,
-            z: rotated.z,
-            s: perspective
-        };
-    }
-
-    function buildCuboid(center, size) {
-        const half = { x: size.x / 2, y: size.y / 2, z: size.z / 2 };
-        return [
-            { x: center.x - half.x, y: center.y - half.y, z: center.z - half.z },
-            { x: center.x + half.x, y: center.y - half.y, z: center.z - half.z },
-            { x: center.x + half.x, y: center.y + half.y, z: center.z - half.z },
-            { x: center.x - half.x, y: center.y + half.y, z: center.z - half.z },
-            { x: center.x - half.x, y: center.y - half.y, z: center.z + half.z },
-            { x: center.x + half.x, y: center.y - half.y, z: center.z + half.z },
-            { x: center.x + half.x, y: center.y + half.y, z: center.z + half.z },
-            { x: center.x - half.x, y: center.y + half.y, z: center.z + half.z }
-        ];
-    }
-
-    function faceNormal(face) {
-        const u = {
-            x: face[1].x - face[0].x,
-            y: face[1].y - face[0].y,
-            z: face[1].z - face[0].z
-        };
-        const v = {
-            x: face[2].x - face[0].x,
-            y: face[2].y - face[0].y,
-            z: face[2].z - face[0].z
-        };
-        return {
-            x: u.y * v.z - u.z * v.y,
-            y: u.z * v.x - u.x * v.z,
-            z: u.x * v.y - u.y * v.x
-        };
-    }
-
-    function normalize(vector) {
-        const length = Math.hypot(vector.x, vector.y, vector.z) || 1;
-        return { x: vector.x / length, y: vector.y / length, z: vector.z / length };
-    }
-
-    function drawPolygon(points, fillStyle, strokeStyle, lineWidth = 1) {
-        ctx.beginPath();
-        ctx.moveTo(points[0].x, points[0].y);
-        for (let i = 1; i < points.length; i++) ctx.lineTo(points[i].x, points[i].y);
-        ctx.closePath();
-        ctx.fillStyle = fillStyle;
-        ctx.fill();
-        if (strokeStyle) {
-            ctx.lineWidth = lineWidth;
-            ctx.strokeStyle = strokeStyle;
-            ctx.stroke();
-        }
-    }
-
-    function drawCuboid(part, state, mainColor, accentColor) {
-        const vertices = buildCuboid(part.center, part.size).map((point) => project(point, state));
-        const faces = [
-            { indices: [0, 1, 2, 3], tint: -0.14 },
-            { indices: [4, 5, 6, 7], tint: 0.12 },
-            { indices: [0, 1, 5, 4], tint: -0.05 },
-            { indices: [2, 3, 7, 6], tint: 0.1 },
-            { indices: [1, 2, 6, 5], tint: 0.08 },
-            { indices: [0, 3, 7, 4], tint: -0.08 }
-        ].map((face) => {
-            const worldFace = face.indices.map((index) => part.world[index]);
-            const normal = normalize(faceNormal(worldFace));
-            return {
-                points: face.indices.map((index) => vertices[index]),
-                depth: face.indices.reduce((sum, index) => sum + vertices[index].z, 0) / face.indices.length,
-                normal,
-                tint: face.tint
-            };
-        }).sort((a, b) => b.depth - a.depth);
-
-        const light = normalize({ x: 0.4, y: 0.8, z: -0.2 });
-        for (const face of faces) {
-            const facing = Math.max(0, face.normal.x * light.x + face.normal.y * light.y + face.normal.z * light.z);
-            const base = face.tint >= 0 ? accentColor : mainColor;
-            const amount = 0.12 + facing * 0.34 + face.tint;
-            drawPolygon(face.points, shade(base, Math.max(0, Math.min(0.6, amount))), "rgba(255,255,255,0.05)", 1);
-        }
-    }
-
-    function drawWheel(center, state, preset) {
-        const projected = project(center, state);
-        const radius = preset.wheel * 120 * projected.s;
-        const wheelWidth = radius * 0.74;
-        const x = projected.x;
-        const y = projected.y;
-
-        ctx.save();
-        ctx.translate(x, y);
-        ctx.rotate(-0.45);
-
-        ctx.fillStyle = "#09090b";
-        ctx.beginPath();
-        ctx.ellipse(0, 0, radius * 1.08, wheelWidth * 1.18, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = rgbToHex(rimColor);
-        ctx.beginPath();
-        ctx.ellipse(0, 0, radius * 0.74, wheelWidth * 0.78, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = "#e5e7eb";
-        ctx.beginPath();
-        ctx.ellipse(0, 0, radius * 0.38, wheelWidth * 0.4, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        ctx.fillStyle = rgbToHex(brakeColor);
-        ctx.beginPath();
-        ctx.roundRect(-radius * 0.18, -wheelWidth * 0.34, radius * 0.16, wheelWidth * 0.68, 4);
-        ctx.fill();
-
-        ctx.restore();
-    }
-
-    function buildSceneParts(preset) {
-        const bodyColorHex = rgbToHex(bodyColor);
-        const bodyMain = hexToRgb(bodyColorHex);
-        const bodyShade = mixColor(bodyMain, { r: 15, g: 23, b: 42 }, 0.42);
-        const roofShade = mixColor(bodyMain, { r: 17, g: 24, b: 39 }, 0.7);
-        const black = { r: 17, g: 24, b: 39 };
-
-        return {
-            bodyMain,
-            bodyShade,
-            roofShade,
-            black,
-            parts: [
-                { center: { x: 0.15, y: 0.72, z: 0 }, size: { x: 2.6 * preset.scale, y: preset.height, z: 1.28 * preset.width }, world: buildCuboid({ x: 0.15, y: 0.72, z: 0 }, { x: 2.6 * preset.scale, y: preset.height, z: 1.28 * preset.width }) },
-                { center: { x: 0.45, y: 0.95, z: 0 }, size: { x: preset.hood, y: preset.height * 0.68, z: 1.1 * preset.width }, world: buildCuboid({ x: 0.45, y: 0.95, z: 0 }, { x: preset.hood, y: preset.height * 0.68, z: 1.1 * preset.width }) },
-                { center: { x: -0.12, y: 1.32, z: 0 }, size: { x: 1.2 * preset.scale, y: preset.roof, z: 1.0 * preset.width }, world: buildCuboid({ x: -0.12, y: 1.32, z: 0 }, { x: 1.2 * preset.scale, y: preset.roof, z: 1.0 * preset.width }) },
-                { center: { x: -0.15, y: 1.55, z: 0 }, size: { x: 0.8 * preset.scale, y: preset.roof * 0.72, z: 0.95 * preset.width }, world: buildCuboid({ x: -0.15, y: 1.55, z: 0 }, { x: 0.8 * preset.scale, y: preset.roof * 0.72, z: 0.95 * preset.width }) },
-                { center: { x: -0.95, y: 0.38, z: 0 }, size: { x: 1.2 * preset.scale, y: 0.14, z: 0.92 * preset.width }, world: buildCuboid({ x: -0.95, y: 0.38, z: 0 }, { x: 1.2 * preset.scale, y: 0.14, z: 0.92 * preset.width }) },
-                { center: { x: -1.0, y: 0.23, z: 0 }, size: { x: 1.1 * preset.scale, y: 0.1, z: 0.92 * preset.width }, world: buildCuboid({ x: -1.0, y: 0.23, z: 0 }, { x: 1.1 * preset.scale, y: 0.1, z: 0.92 * preset.width }) },
-                { center: { x: -0.78, y: 1.9, z: 0 }, size: { x: 0.5, y: 0.04, z: 0.22 }, world: buildCuboid({ x: -0.78, y: 1.9, z: 0 }, { x: 0.5, y: 0.04, z: 0.22 }) }
-            ]
-        };
-    }
-
-    function render() {
-        ctx.clearRect(0, 0, viewer.clientWidth, viewer.clientHeight);
-        const width = viewer.clientWidth;
-        const height = viewer.clientHeight;
-
-        const gradient = ctx.createLinearGradient(0, 0, 0, height);
-        gradient.addColorStop(0, "#020617");
-        gradient.addColorStop(1, "#0f172a");
-        ctx.fillStyle = gradient;
-        ctx.fillRect(0, 0, width, height);
-
-        const state = {
-            yaw,
-            pitch,
-            zoom: 1.0,
-            verticalOffset: currentPreset.title === "Huracan" ? 28 : 12,
-            scale: 160 * currentPreset.scale,
-            perspectiveScale: currentPreset.title === "Huracan" ? 1.1 : 1.25
-        };
-
-        const floorY = height * 0.78;
-        const floorGradient = ctx.createRadialGradient(width * 0.5, floorY, 20, width * 0.5, floorY, width * 0.7);
-        floorGradient.addColorStop(0, "rgba(249,115,22,0.22)");
-        floorGradient.addColorStop(1, "rgba(2,6,23,0)");
-        ctx.fillStyle = floorGradient;
-        ctx.beginPath();
-        ctx.ellipse(width * 0.5, floorY, width * 0.42, height * 0.18, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        const scene = buildSceneParts(currentPreset);
-        const shadowY = floorY + 18;
-        ctx.fillStyle = "rgba(0,0,0,0.35)";
-        ctx.beginPath();
-        ctx.ellipse(width * 0.5, shadowY, 180 * zoom, 42 * zoom, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        const wheelOffsets = [
-            { x: 1.1, y: 0.05, z: 0.73 },
-            { x: -1.0, y: 0.05, z: 0.73 },
-            { x: 1.1, y: 0.05, z: -0.73 },
-            { x: -1.0, y: 0.05, z: -0.73 }
-        ];
-
-        for (const part of scene.parts) {
-            drawCuboid(part, state, scene.bodyMain, part.center.y > 1 ? scene.roofShade : scene.bodyShade);
-        }
-
-        wheelOffsets.forEach((offset) => drawWheel(offset, state, currentPreset));
-
-        // Lights
-        ctx.fillStyle = "rgba(255,255,255,0.75)";
-        ctx.fillRect(width * 0.62, height * 0.56, 12, 6);
-        ctx.fillRect(width * 0.64, height * 0.56, 12, 6);
-        ctx.fillStyle = "rgba(255,70,0,0.8)";
-        ctx.fillRect(width * 0.37, height * 0.56, 12, 6);
-        ctx.fillRect(width * 0.35, height * 0.56, 12, 6);
-
-        if (emsUpgraded) {
-            ctx.save();
-            ctx.globalAlpha = 0.28;
-            ctx.strokeStyle = "#22c55e";
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.arc(width * 0.5, height * 0.47, 150, 0, Math.PI * 2);
-            ctx.stroke();
-            ctx.restore();
-        }
-
-        if (emsUpgraded) {
-            yaw += 0.0035;
-        }
-
-        requestAnimationFrame(render);
-    }
-
-    function setBodyColor(value) {
-        bodyColor = hexToRgb(value);
-        updateStatus();
-    }
-
-    function setRimColor(value) {
-        rimColor = hexToRgb(value);
-        updateStatus();
-    }
-
-    function setBrakeColor(value) {
-        brakeColor = hexToRgb(value);
-        updateStatus();
-    }
-
-    function toggleUpgrade() {
-        emsUpgraded = !emsUpgraded;
-        document.getElementById("upgradeLabel").innerText = emsUpgraded ? "EMS on" : "EMS off";
-        document.getElementById("upgradeBtn").innerText = emsUpgraded ? "EMS upgrade active" : "Toggle EMS upgrade";
-    }
-
-    function updateStatus() {
-        const engineMode = document.getElementById("engineMode").value;
-        const title = currentPreset.title || "Urus";
-        document.getElementById("statusLabel").innerText = `${title} | ${engineMode.toUpperCase()}`;
-    }
-
-    function applyPreset(key) {
-        currentPreset = presets[key] || presets.urus;
-        document.getElementById("preset").value = key in presets ? key : "urus";
-        document.getElementById("engineMode").value = currentPreset.engine;
-        document.getElementById("statusLabel").innerText = `${currentPreset.title} ready`;
-        updateStatus();
-    }
-
-    document.getElementById("preset").addEventListener("change", (event) => {
-        applyPreset(event.target.value);
-    });
-
-    document.getElementById("engineMode").addEventListener("change", updateStatus);
-
-    viewer.addEventListener("pointerdown", (event) => {
-        dragState = { x: event.clientX, y: event.clientY, yaw, pitch };
-        viewer.setPointerCapture(event.pointerId);
-    });
-
-    viewer.addEventListener("pointermove", (event) => {
-        if (!dragState) return;
-        const dx = event.clientX - dragState.x;
-        const dy = event.clientY - dragState.y;
-        yaw = dragState.yaw + dx * 0.008;
-        pitch = Math.max(-0.45, Math.min(0.35, dragState.pitch + dy * 0.006));
-    });
-
-    viewer.addEventListener("pointerup", () => {
-        dragState = null;
-    });
-
-    viewer.addEventListener("pointercancel", () => {
-        dragState = null;
-    });
-
-    viewer.addEventListener("wheel", (event) => {
-        event.preventDefault();
-        zoom = Math.max(0.75, Math.min(1.35, zoom - event.deltaY * 0.001));
-    }, { passive: false });
-
-    window.addEventListener("resize", resizeCanvas);
-
-    resizeCanvas();
-    applyPreset("urus");
-    updateStatus();
-    render();
 </script>

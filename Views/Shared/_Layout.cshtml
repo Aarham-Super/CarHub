@@ -8,7 +8,33 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="google-site-verification" content="esDDuTKiHF7Wdzyr2C_9MjIQbcvFpkC49A_NVGBIPrU" />
     <title>@ViewData["Title"] - CarHub</title>
+    
+    <script type="application/ld+json">
+    {
+      "@@context": "https://schema.org",
+      "@@type": "WebSite",
+      "name": "CarHub",
+      "url": "https://carhub.tryasp.net",
+      "description": "An ASP.NET 10 showcase garage project.",
+      "author": {
+        "@@type": "Person",
+        "name": "Aarham",
+        "url": "https://github.com/Aarham-Super",
+        "description": "Developer of CarHub (ASP.NET 10) and capb (Cloudflare Pages).",
+        "sameAs": [
+          "https://capb.pages.dev"
+        ]
+      },
+      "potentialAction": {
+        "@@type": "SearchAction",
+        "target": "https://carhub.tryasp.net/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
     <link rel="icon" type="image/x-icon" href="~/favicon.ico" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="~/css/site.css" />
@@ -53,9 +79,12 @@
             <div class="flex flex-wrap items-center gap-3">
                 @if (User?.Identity?.IsAuthenticated == true)
                 {
-                    <span class="rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm font-medium text-emerald-100">
-                        Signed in as @(User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name)
-                    </span>
+                    var signedInEmail = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value ?? User.Identity?.Name;
+                    var signedInUserName = User.FindFirst("urn:carhub:username")?.Value ?? User.FindFirst(System.Security.Claims.ClaimTypes.Name)?.Value ?? signedInEmail;
+                    <div class="rounded-2xl border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-sm text-emerald-100">
+                        <div class="font-semibold">@signedInUserName</div>
+                        <div class="text-xs text-emerald-100/80">@signedInEmail</div>
+                    </div>
                     <form asp-controller="Home" asp-action="Logout" method="post">
                         @Html.AntiForgeryToken()
                         <button type="submit" class="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:border-orange-400/40 hover:bg-white/10">
@@ -80,13 +109,86 @@
     <footer class="border-t border-white/10 py-8 text-sm text-slate-400">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4 lg:items-center">
-                <p>&copy; @DateTime.Now.Year CarHub. Made by Aarham. Licensed under Apache 2.0.</p>
+                <p>&copy; 2026 Aarham. All Rights Reserved. Licensed under Apache 2.0.</p>
                 <p><a class="text-orange-300 hover:text-orange-200" href="/Home/Account">Don't have an account? Create one.</a></p>
                 <p>Need info? <a class="text-orange-300 hover:text-orange-200" href="mailto:CarrHub@hotmail.com">CarrHub@hotmail.com</a></p>
+                <p>
+                    <a class="text-orange-300 hover:text-orange-200" href="/Home/Terms">Terms of Use</a>
+                    <span class="mx-2 text-slate-600">•</span>
+                    <a class="text-orange-300 hover:text-orange-200" href="/Home/Privacy">Privacy Policy</a>
+                </p>
                 <p>@(stripeReady ? "Stripe key detected and ready." : "Stripe is not configured yet.")</p>
             </div>
         </div>
     </footer>
+
+    <div id="cookieBanner" class="fixed inset-x-4 bottom-4 z-[60] hidden rounded-3xl border border-white/10 bg-slate-950/95 p-4 shadow-2xl shadow-black/40 backdrop-blur md:inset-x-auto md:right-4 md:w-[720px]">
+        <div class="grid gap-4 md:grid-cols-[1.2fr_0.8fr] md:items-center">
+            <div>
+                <div class="text-xs uppercase tracking-[0.35em] text-slate-500">Cookies</div>
+                <h2 class="mt-2 text-lg font-bold text-white">We use cookies</h2>
+                <p class="mt-1 text-sm leading-6 text-slate-300">
+                    CarHub uses necessary cookies for sign-in and cart behavior, plus optional cookies for preferences.
+                </p>
+            </div>
+            <div class="flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onclick="openCookiePreferences()" class="rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition hover:border-orange-400/40 hover:bg-white/10">
+                    My preference
+                </button>
+                <button type="button" onclick="setCookieConsent('rejected')" class="rounded-full border border-white/10 bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600">
+                    Reject all
+                </button>
+                <button type="button" onclick="setCookieConsent('accepted')" class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-500">
+                    Accept all
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="cookiePreferences" class="fixed inset-0 z-[70] hidden items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+        <div class="w-full max-w-lg rounded-3xl border border-white/10 bg-slate-950 p-6 shadow-2xl shadow-black/50">
+            <div class="flex items-start justify-between gap-4">
+                <div>
+                    <div class="text-xs uppercase tracking-[0.35em] text-slate-500">Cookie settings</div>
+                    <h2 class="mt-2 text-2xl font-black text-white">Choose what to allow</h2>
+                </div>
+                <button type="button" class="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-sm text-white" onclick="closeCookiePreferences()">Close</button>
+            </div>
+
+            <div class="mt-6 space-y-4">
+                <label class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <span>
+                        <span class="block font-semibold text-white">Necessary</span>
+                        <span class="block text-sm text-slate-400">Required for login and cart behavior.</span>
+                    </span>
+                    <input type="checkbox" checked disabled class="h-5 w-5 rounded border-slate-500 bg-slate-900 text-emerald-500" />
+                </label>
+                <label class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <span>
+                        <span class="block font-semibold text-white">Preferences</span>
+                        <span class="block text-sm text-slate-400">Remember UI choices and theme settings.</span>
+                    </span>
+                    <input id="cookiePrefFunctional" type="checkbox" class="h-5 w-5 rounded border-slate-500 bg-slate-900 text-emerald-500" />
+                </label>
+                <label class="flex items-center justify-between gap-4 rounded-2xl border border-white/10 bg-white/5 px-4 py-3">
+                    <span>
+                        <span class="block font-semibold text-white">Analytics</span>
+                        <span class="block text-sm text-slate-400">Optional usage measurements for improvements.</span>
+                    </span>
+                    <input id="cookiePrefAnalytics" type="checkbox" class="h-5 w-5 rounded border-slate-500 bg-slate-900 text-emerald-500" />
+                </label>
+            </div>
+
+            <div class="mt-6 flex flex-col gap-2 sm:flex-row sm:justify-end">
+                <button type="button" onclick="setCookieConsent('rejected')" class="rounded-full border border-white/10 bg-slate-700 px-4 py-2 text-sm font-semibold text-white transition hover:bg-slate-600">
+                    Reject all
+                </button>
+                <button type="button" onclick="saveCookiePreferences()" class="rounded-full bg-accent px-4 py-2 text-sm font-semibold text-white transition hover:bg-orange-500">
+                    Save preference
+                </button>
+            </div>
+        </div>
+    </div>
 
     <script>
         function updateCartCount() {
@@ -104,7 +206,74 @@
             updateCartCount();
         }
 
+        function getCookie(name) {
+            const value = `; ${document.cookie}`;
+            const parts = value.split(`; ${name}=`);
+            if (parts.length === 2) return parts.pop().split(';').shift();
+            return null;
+        }
+
+        function setCookie(name, value, maxAgeSeconds) {
+            document.cookie = `${name}=${encodeURIComponent(value)}; path=/; max-age=${maxAgeSeconds}; samesite=lax`;
+        }
+
+        function setCookieConsent(mode) {
+            setCookie("carhub_cookie_consent", mode, 60 * 60 * 24 * 365);
+            localStorage.setItem("carhub_cookie_consent", mode);
+            hideCookieBanner();
+            closeCookiePreferences();
+        }
+
+        function openCookiePreferences() {
+            const panel = document.getElementById("cookiePreferences");
+            if (panel) {
+                const state = getCookie("carhub_cookie_consent") || localStorage.getItem("carhub_cookie_consent") || "custom";
+                document.getElementById("cookiePrefFunctional").checked = state !== "rejected";
+                document.getElementById("cookiePrefAnalytics").checked = state === "accepted";
+                panel.classList.remove("hidden");
+                panel.classList.add("flex");
+            }
+            hideCookieBanner();
+        }
+
+        function closeCookiePreferences() {
+            const panel = document.getElementById("cookiePreferences");
+            if (panel) {
+                panel.classList.add("hidden");
+                panel.classList.remove("flex");
+            }
+        }
+
+        function saveCookiePreferences() {
+            const functional = document.getElementById("cookiePrefFunctional")?.checked ?? true;
+            const analytics = document.getElementById("cookiePrefAnalytics")?.checked ?? false;
+            const mode = analytics && functional ? "accepted" : functional ? "custom" : "rejected";
+            setCookie("carhub_cookie_consent", mode, 60 * 60 * 24 * 365);
+            localStorage.setItem("carhub_cookie_consent", mode);
+            setCookie("carhub_cookie_preferences", JSON.stringify({ functional, analytics }), 60 * 60 * 24 * 365);
+            hideCookieBanner();
+            closeCookiePreferences();
+        }
+
+        function hideCookieBanner() {
+            const banner = document.getElementById("cookieBanner");
+            if (banner) {
+                banner.classList.add("hidden");
+            }
+        }
+
+        function showCookieBannerIfNeeded() {
+            const banner = document.getElementById("cookieBanner");
+            if (!banner) return;
+
+            const consent = getCookie("carhub_cookie_consent") || localStorage.getItem("carhub_cookie_consent");
+            if (!consent) {
+                banner.classList.remove("hidden");
+            }
+        }
+
         updateCartCount();
+        showCookieBannerIfNeeded();
     </script>
 
     @await RenderSectionAsync("Scripts", required: false)
